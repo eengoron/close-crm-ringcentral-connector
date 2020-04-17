@@ -58,7 +58,7 @@ def find_close_lead_ids_from_phone_number(phone_number):
             has_more = resp['has_more']
         if not lead_ids:
             # Create lead if it does not exist
-            lead = api.post('lead', data={'contacts': [{ 'phones': [{ 'phone': phone_number, 'type': 'office'}]}]})
+            lead = api.post('lead', data={'contacts': [{ 'phones': [{ 'phone': phone_number, 'type': 'office'}]}], 'status': 'Potential'})
             lead_ids.append(lead['id'])
         return lead_ids
     except APIError as e:

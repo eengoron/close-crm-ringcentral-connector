@@ -124,10 +124,12 @@ def get_ringcentral_calls(date_from, date_to):
                 break
             except Exception as e:
                 retries += 1
+                time.sleep(4)
                 platform.refresh()
                 logging.error(f"Failed to get calls because {str(e)}, so we refreshed")
                 if retries == 5:
                     logging.error(f"Failed to pull calls after retry for {date_from}")
+                    return calls
         calls += [i for i in resp.get('records', [])]
         page += 1
         has_more = bool(resp['navigation'].get('nextPage'))

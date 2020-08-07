@@ -115,18 +115,26 @@ def get_ringcentral_calls(date_from, date_to):
         'dateTo': date_to,
         'view': 'Detailed'
     }
-    try:
-        while has_more:
-            query['page'] = page
-            resp = platform.get('/restapi/v1.0/account/~/call-log/?' + urlencode(query)).json_dict()
-            calls += [i for i in resp['records']]
-            page += 1
-            has_more = bool(resp['navigation'].get('nextPage'))
-            ## Protect ourselves from ratelimits
-            if has_more:
-                time.sleep(6)
-    except Exception as e:
-        logging.error(f"Failed to get calls because {str(e)}")
+    while has_more:
+        query['page'] = page
+        retries = 0
+        while retries < 5:
+            try:
+                resp = platform.get('/restapi/v1.0/account/~/call-log/?' + urlencode(query)).json_dict()
+                break
+            except Exception as e:
+                retries += 1
+                platform.refresh()
+                logging.error(f"Failed to get calls because {str(e)}, so we refreshed")
+                if retries == 5:
+                    logging.error(f"Failed to pull calls after retry for {date_from}")
+        calls += [i for i in resp.get('records', [])]
+        page += 1
+        has_more = bool(resp['navigation'].get('nextPage'))
+        ## Protect ourselves from ratelimits
+        if has_more:
+            time.sleep(6)
+        
     return calls
 
 ## Method to find RC Users names from Detailed Legs
